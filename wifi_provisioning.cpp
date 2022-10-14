@@ -9,6 +9,8 @@
 #define ESP_WIFI_SOFTAP_MAX_STA_CONN 4
 #define ESP_MAXIMUM_RETRY 10
 
+#define ESP_WIFI_STA_HOSTNAME "myesp32"
+
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
  * - we failed to connect after the maximum amount of retries */
@@ -51,7 +53,7 @@ namespace WIFI_PROVISIONING
             if (_connect_to_network())
             {
                   ret = true;
-                  _save_credentials();
+                  _save_credentials(); //@@@
             }
             return ret;
       }
@@ -436,7 +438,7 @@ namespace WIFI_PROVISIONING
                                                                 NULL,
                                                                 &instance_got_ip));
 
-            esp_netif_create_default_wifi_sta();
+            esp_netif_handler = esp_netif_create_default_wifi_sta(); //%%%
 
             wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
             ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -449,6 +451,14 @@ namespace WIFI_PROVISIONING
             glob_wifi_config.sta.pmf_cfg.required = false;
             ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
             ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &glob_wifi_config));
+
+            ESP_LOGI(TAG, "set hostname"); // must be done before connection
+            ESP_ERROR_CHECK(esp_netif_set_hostname(esp_netif_handler, ESP_WIFI_STA_HOSTNAME));
+            // esp_err_t ret2 = esp_netif_set_hostname(esp_netif_handler, "esp32_1");
+            // if (ret2 != ESP_OK)
+            // {
+            //       ESP_LOGE(TAG, "setting host name failed, error: ");
+            // }
 
             ESP_ERROR_CHECK(esp_wifi_start());
 
